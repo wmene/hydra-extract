@@ -7,7 +7,8 @@ jetty/logs/*.log
 jetty/solr/data/*
 log/*
 webrat-*
-public/
+public
+public/*
 config/SolrMarc/*.log*
 
 solr_marc/solrmarc.log
