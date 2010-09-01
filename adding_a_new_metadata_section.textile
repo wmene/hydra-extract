@@ -1,0 +1,56 @@
+Adding a new Metadata Section (with new metadata fields) to an existing Model:
+
+	1.	Decide where you will store metadata fields 
+	⁃	which datastream, what schema & which node(s) will each field go into
+	2.	Set up Metadata Mappings
+	⁃	define mappings
+	⁃	update xml_template as necessary
+	3.	Ensure that Model declares all the datastreams and mappings you need
+	4.	Add An Accordion Section to the Edit Page
+	5.	Create a new partial for the new Accordion Section
+	6.	Fill in template for the accordion section
+	7.	enter form tag
+	8.	put the fields into the template 
+	⁃	use fedora_text_field helper for all fields on the first pass
+	9.	look at the page (start servers, open browser)
+	10.	set up options for select tags
+	11.	replace fedora_text_field with fedora_select where appropriate and set choices
+	12.	customize page css
+
+
+[Update the Browse view… ]
+
+h2. Decide where you will store metadata fields 
+
+Right to Deposit
+Datastream: hydrangea_dataset
+Node: deposit_rights
+Options: owner, authorized
+Pointer: deposit_rights
+
+Send notifications to
+Datastream: hydrangea_dataset
+Node: notification_email
+Pointer: notification_email
+
+Embargo
+Datastream: rightsMetadata
+Node: embargo/machine[@type=months]
+Options:  none, 6, 12, 24
+Pointer: [:embargo, :months]
+
+Reason for Embargo
+Datastream: rightsMetadata
+Node: embargo/human
+Pointer: [:embargo, :human_readable]
+
+Open Data Commons License
+Datastream: rightsMetadata
+Node: copyright/human
+Options:  PDDL, ODC-By, ODC-ODbL (actual text of license?)
+Pointer: [:copyright, :human_readable]
+
+hydrangea_dataset & properties datastreams …
+rightsMetadata …
+
+h2. Set up Metadata Mappings
