@@ -169,29 +169,29 @@ Add this to vendor/plugins/hydrangea_datasets/app/models/hydrangea_dataset.rb
 </pre>
 
 
-h2.	Ensure that Model declares all the datastreams and mappings you need
+h2. Ensure that Model declares all the datastreams and mappings you need
 
 Now we have all of the datastreams and mappings we decided to use.  Time to put them into the application's views.
 
-h2.	Add An Accordion Section to the Edit Page
+h2. Add An Accordion Section to the Edit Page
 
 Add an accordion section into vendor/plugins/hydrangea_datasets/views/_edit.html.haml and set it to render a partial called "edit_license"
 
-h2.	Create a new partial for the new Accordion Section
+h2. Create a new partial for the new Accordion Section
 
 Create a partial at vendor/plugins/hydrangea_datasets/views/_edit_license.html.haml
 
-h2.	Fill in template for the accordion section
+h2. Fill in template for the accordion section
 
 refer to vendor/plugins/hydrangea_datasets/views/_edit_description.html.haml and imitate its code
 
-h3.	Create the form tag
+h3. Create the form tag
 
 h3. Put Fields into the Template
 
 ⁃	use fedora_text_field helper for all fields on the first pass
 
-h2.	look at the page 
+h2. look at the page 
 
 start servers, open browser
 
@@ -203,10 +203,10 @@ Click the dropdown on the "add an Article" button and select "add a Dataset"
 
 You should see a Dataset with the accordion section you've just added.
 
-h2.	Set up options for use in the select tags
+h2. Set up options for use in the select tags
 
-h2.	replace fedora_text_field with fedora_select where appropriate and set choices
+h2. replace fedora_text_field with fedora_select where appropriate and set choices
 
-h2.	customize page css
+h2. customize page css
 
 
