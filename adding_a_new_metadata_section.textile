@@ -168,6 +168,7 @@ Add this to vendor/plugins/hydrangea_datasets/app/models/hydrangea_dataset.rb
   end
 </pre>
 
+
 h2.	Ensure that Model declares all the datastreams and mappings you need
 
 Now we have all of the datastreams and mappings we decided to use.  Time to put them into the application's views.
