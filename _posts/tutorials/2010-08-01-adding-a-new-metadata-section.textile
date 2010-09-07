@@ -1,0 +1,212 @@
+h1. Tutorial: Adding a new Metadata Section (with new metadata fields) to an existing Model
+
+
+
+h2. Pre-tutorial Git setup
+
+[Ignore this section for now]
+
+Becoming comfortable with git is an important part of learning to work with this code.  In order to encourage you to dive right into git, we built a bit of git learning directly into the tutorial.
+
+This tutorial uses real-world work as its basis.  If you look at the current head of the Hydrangea code in git, you will see that this work is already done!  To see the before & after, you need to check out the last commit that did not have this work and then compare it with the commit that contains the last of this work.
+
+h3. How to check out the "before" code snapshot
+
+h3. How to step forward through the commits
+
+h2. Adding a new Metadata Section (with new metadata fields) to an existing Model:
+
+	1.	Decide where you will store metadata fields (which datastream, what schema & which node(s) will each field go into)
+	2.	Set up Metadata Mappings
+	3.	Ensure that Model declares all the datastreams and mappings you need
+	4.	Add An Accordion Section to the Edit Page
+	5.	Create a new partial for the new Accordion Section
+	6.	Fill in template for the accordion section
+	7.	enter form tag
+	8.	put the fields into the template 
+	9.	look at the page (start servers, open browser)
+	10.	set up options for select tags
+	11.	replace fedora_text_field with fedora_select where appropriate and set choices
+	12.	customize page css
+
+
+[Update the Browse view… ]
+
+h2. Decide where you will store metadata fields 
+
+h3. The Metadata Decisions
+
+*Right to Deposit*
+Datastream: hydrangea_dataset
+Node: deposit_rights
+Options: owner, authorized
+Pointer: deposit_rights
+
+*Send notifications to*
+Datastream: hydrangea_dataset
+Node: notification_email
+Pointer: notification_email
+
+*Embargo*
+Datastream: rightsMetadata
+Node: embargo/machine[@type=months]
+Options:  none, 6, 12, 24
+Pointer: [:embargo, :months]
+
+*Reason for Embargo*
+Datastream: rightsMetadata
+Node: embargo/human
+Pointer: [:embargo, :human_readable]
+
+*Open Data Commons License*
+Datastream: rightsMetadata
+Node: copyright/human
+Options:  PDDL, ODC-By, ODC-ODbL (actual text of license?)
+Pointer: [:copyright, :human_readable]
+
+h3. Explanation 
+
+hydrangea_dataset & properties datastreams …
+rightsMetadata …
+
+h2. Set up Metadata Mappings
+
+Look in HydrangeaDataset model definition in vendor/plugins/hydrangea_datasets/app/models/hydrangea_dataset.rb.  You will see that there is already a has_metadata declaration for the rightsMetadata datastream and there is no declaration for the hydrangea_dataset datastream.  We will re-use the existing rightsMetadata Datastream class, but will extend its mappings to reflect our decisions above.  We will then create a new declaration for hydrangea_dataset datastream and construct its mappings from scratch.
+
+⁃	define mappings
+⁃	update xml_template as necessary
+
+h3. Re-Using the rightsMetadata datastream and Extending its Mappings
+
+The has_metadata declaration for rightsMetadata indicates that it is using the Hydra::RightsMetadata Datastream class for all of its metadata mappings and Datastream-specific behaviors.  Since that class is in the Hydra:: namespace, we know that it's being provided by the hydra_repository plugin.  In this case, it's in vendor/plugins/hydra_repository/lib/hydra/rights_metadata.rb
+
+Within rights_metadata.rb, you will see that it declares a Ruby class that extends ActiveFedora::NokogiriDatastream.  ActiveFedora and NokogiriDatastream do most of the heavy lifting for you.  All you have to do within your Datastream class definitions is declare what metadata mappings you're using.  To do that, you use the Opinionated Metadata (OM) tools to map between your application's terminology and the XML underneath.  
+
+Let's take a look at the rightsMetadata mappings.
+
+First, you see a root_property declaration.  This provides the basic information about namespaces and schemas.  In these mappings, we are working with the "Hydra Rights Metadata Schema":https://wiki.duraspace.org/display/hydra/Hydra+rights+metadata.  
+
+<pre>
+root_property :rightsMetadata, "rightsMetadata", "http://hydra-collab.stanford.edu/schemas/rightsMetadata/v1", :schema=>"http://github.com/projecthydra/schemas/tree/v1/rightsMetadata.xsd"          
+</pre>
+
+After that, you see a property declaration for "copyright".  This covers one of the mappings we need.
+
+<pre>
+  property :copyright, :path=>"copyright",
+              :subelements=>["machine"],
+              :convenience_methods => {
+                :human_readable => {:path=>"human"}
+              }
+</pre>
+
+This provides mappings to //copyright, //copyright/machine, and //copyright/human.  The mappings allow us to refer to those nodes using OM pointers everywhere else in our application.  [:copyright], [:copyright, :machine], and [:copyright, :human_readable].  If you look back at the Metadata Mapping decisions, we decided to put the *Open Data Commons License* into [:copyright, :human_readable].  These lines make that possible.
+
+Next, you will see OM property declarations for the access types that we deal with in the application. 
+
+<pre>
+  property :access, :path=>"access",
+              # :subelements=>[:machine],
+              :convenience_methods => {
+                :human_readable => {:path=>"human"},
+                :group => {:path=>"group"},
+                :person => {:path=>"person"}
+              }
+  property :discover_access, :variant_of=>:access, :attributes=>{:type=>"discover"}
+  property :read_access, :variant_of=>:access, :attributes=>{:type=>"read"}
+  property :edit_access, :variant_of=>:access, :attributes=>{:type=>"edit"}
+</pre>
+
+This allows us to use pointers like [:access, :group] and [:access, :person] to grab all group and individual access values in the document.  It also allows us to use pointers like [:read_access, :person] or [:edit_access, :group] to obtain a list of all of the entries for groups or individuals with discover, read, or edit access.  We will not be using these Terms in this tutorial, but they play an important role in the way Hydra enforces access controls on objects.
+
+For our work, we need to add two new properties, accessible at [:embargo, :human_readable] and [:embargo, :months].  To achieve this, add the following lines to the file:
+
+<pre>
+  property :embargo, :path=>"embargo",
+              :convenience_methods => {
+                :human_readable => {:path=>"human"}
+                :months => {:path=>"machine", :attributes=>{:type=>"months"}}
+              }
+</pre>
+
+There is one final change left before the Hydra::RightsMetadata Datastream will be ready for us to use.  We want to put an empty embargo node into any new RightsMetadata datstreams we create.  To do this, add a line into the Nokogiri::XML::Builder in the xml_template declaration.
+
+<pre>
+  def self.xml_template
+    builder = Nokogiri::XML::Builder.new do |xml|
+      xml.rightsMetadata(:version=>"0.1", "xmlns"=>"http://hydra-collab.stanford.edu/schemas/rightsMetadata/v1") {
+        xml.embargo
+        xml.copyright {
+          xml.human
+        }
+        xml.access(:type=>"discover") {
+          xml.human
+          xml.machine
+        }
+        xml.access(:type=>"read") {
+          xml.human
+          xml.machine
+        }
+        xml.access(:type=>"edit") {
+          xml.human
+          xml.machine
+        }
+      }
+    end
+</pre>
+
+h3. Creating a new hydrangea_dataset Datastream using ActiveFedora's basic MetadataDatastream Class 
+
+In addition to supporting complex XML schemas using OM, ActiveFedora gives you an easy way to declare custom datastreams with dead simple structure.  This is useful for handling extra metadata that doesn't fit into existing schemas and isn't intended for use beyond your content type implementation.
+
+Add this to vendor/plugins/hydrangea_datasets/app/models/hydrangea_dataset.rb
+
+<pre>
+  has_metadata :name => "hydrangea_dataset", :type => ActiveFedora::MetadataDatastream do |m|
+    m.field 'deposit_rights'
+    m.field 'notificaton_email'
+  end
+</pre>
+
+
+h2. Ensure that Model declares all the datastreams and mappings you need
+
+Now we have all of the datastreams and mappings we decided to use.  Time to put them into the application's views.
+
+h2. Add An Accordion Section to the Edit Page
+
+Add an accordion section into vendor/plugins/hydrangea_datasets/views/_edit.html.haml and set it to render a partial called "edit_license"
+
+h2. Create a new partial for the new Accordion Section
+
+Create a partial at vendor/plugins/hydrangea_datasets/views/_edit_license.html.haml
+
+h2. Fill in template for the accordion section
+
+refer to vendor/plugins/hydrangea_datasets/views/_edit_description.html.haml and imitate its code
+
+h3. Create the form tag
+
+h3. Put Fields into the Template
+
+⁃	use fedora_text_field helper for all fields on the first pass
+
+h2. look at the page 
+
+start servers, open browser
+
+Go to http://localhost:3000/
+
+Log in as an archivist (ie. archivist1).  If you haven't already created a user, create a user called archivist1 by clicking on "create an account" on the login page.
+
+Click the dropdown on the "add an Article" button and select "add a Dataset"
+
+You should see a Dataset with the accordion section you've just added.
+
+h2. Set up options for use in the select tags
+
+h2. replace fedora_text_field with fedora_select where appropriate and set choices
+
+h2. customize page css
+
+
