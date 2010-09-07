@@ -1,0 +1,9 @@
+h1. Hydrangea Documentation
+
+We are still assembling this information.  All of our tutorials and documentation pages are works in progress.  We want input about how we can make them better.  Please join the list and give feedback.
+
+h2. Tutorials
+
+Tutorial: "Adding a Metadata Section with Custom Fields":http://github.com/projecthydra/hydrangea/blob/gh-pages/_posts/2010-08-01-tutorial-adding-a-new-metadata-section.textile
+
+Tutorial: "Putting Hydra on top of an Existing Fedora Repository":http://github.com/projecthydra/hydrangea/blob/gh-pages/_posts/hydra-on-an-existing-repository.textile
