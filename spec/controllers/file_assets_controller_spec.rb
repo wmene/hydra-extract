@@ -41,7 +41,7 @@ describe FileAssetsController do
     end
     it "should find all file assets belonging to a given container object if container_id or container_id is provided" do
       mock_container = mock("container")
-      mock_container.expects(:collection_members).with(:response_format => :solr).returns("solr result")
+      mock_container.expects(:file_objects).with(:response_format => :solr).returns("solr result")
       controller.expects(:get_solr_response_for_doc_id).with("_PID_").returns(["container solr response","container solr doc"])
       ActiveFedora::Base.expects(:load_instance).with("_PID_").returns(mock_container)
       xhr :get, :index, :container_id=>"_PID_"
@@ -107,19 +107,14 @@ describe FileAssetsController do
       mock_fa.expects(:label=).with(filename)
       xhr :post, :create, :Filedata=>mock_file, :Filename=>filename
     end
-    it "if container_id is provided, should initialize a Base stub of the container, add the file asset to its relationships, and save both objects" do
+    it "if container_id is provided, should add an isPartOf assertion pointing at the container_id" do
       mock_file = mock("File")
       filename = "Foo File"
       mock_fa = mock("FileAsset", :save)
       FileAsset.expects(:new).returns(mock_fa)
       mock_fa.expects(:add_file_datastream).with(mock_file, :label=>filename)
       mock_fa.expects(:label=).with(filename)
-      
-      mock_container = mock("container")
-      mock_container.expects(:file_objects_append).with(mock_fa) 
-      mock_container.expects(:save)
-      #mock_container.expects(:rels_ext).returns(mock("rels-ext", :save))
-      ActiveFedora::Base.expects(:load_instance).with("_PID_").returns(mock_container)
+      mock_fa.expects(:add_relationship).with(:is_part_of, "_PID_")
       xhr :post, :create, :Filedata=>mock_file, :Filename=>filename, :container_id=>"_PID_"
     end
     
@@ -169,7 +164,7 @@ describe FileAssetsController do
       ActiveFedora::SolrService.register(ActiveFedora.solr_config[:url])
       @test_container = ActiveFedora::Base.new
       @test_container.add_relationship(:is_member_of, "foo:1")
-      @test_container.add_relationship(:has_collection_member, "foo:2")
+      @test_container.add_relationship(:has_part, "foo:2")
       @test_container.save
     end
 
@@ -178,13 +173,13 @@ describe FileAssetsController do
     end
 
     describe "index" do
-      it "should retrieve the container object and its collection members" do
+      it "should retrieve the container object and its file objects" do
         #xhr :get, :index, :container_id=>@test_container.pid
         get :index, {:container_id=>@test_container.pid}
         params[:container_id].should_not be_nil
         assigns(:solr_result).should_not be_nil
         #puts assigns(:solr_result).inspect
-        assigns(:container).collection_members(:response_format=>:id_array).should include("foo:2")
+        assigns(:container).file_objects(:response_format=>:id_array).should include("foo:2")
       end
     end
     
@@ -192,13 +187,14 @@ describe FileAssetsController do
       it "should retain previously existing relationships in container object" do
         mock_file = mock("File")
         filename = "Foo File"
-        mock_fa = mock("FileAsset", :pid=>"test:pid")
+        mock_fa = mock("FileAsset")
         mock_fa.stub_everything
         mock_user = stub("User", :login=>"archivist1")
         controller.stubs(:current_user).returns(mock_user)
         FileAsset.expects(:new).returns(mock_fa)
         post :create, {:Filedata=>mock_file, :Filename=>filename, :container_id=>@test_container.pid}
-        assigns(:container).collection_members(:response_format=>:id_array).should include("foo:2")
+        @test_container.file_objects(:response_format=>:id_array).should include("foo:2")
+        # assigns(:container).file_objects(:response_format=>:id_array).should include("foo:2")
       end
     end
   end

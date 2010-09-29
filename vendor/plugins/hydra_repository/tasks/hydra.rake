@@ -20,7 +20,13 @@ namespace :hydra do
     else
       pid = ENV["pid"]
       puts "Deleting '#{pid}' from #{Fedora::Repository.instance.fedora_url}"
-      ActiveFedora::Base.load_instance(pid).delete
+      begin
+        ActiveFedora::Base.load_instance(pid).delete
+      rescue NoMethodError
+        puts "Did not find any object #{pid}. Skipping."
+      rescue ActiveFedora::ObjectNotFoundError 
+        puts "Did not find any object #{pid}. Skipping."
+      end
       puts "The object has been deleted."
     end
   end
