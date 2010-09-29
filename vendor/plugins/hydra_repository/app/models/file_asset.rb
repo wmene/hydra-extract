@@ -2,9 +2,9 @@ class FileAsset < ActiveFedora::Base
   
   include Hydra::ModelMethods
   
-  has_relationship "containers", :has_collection_member, :inbound => true
+  has_relationship "containers", :has_part, :inbound => true
   
-  # deletes the object identified by pid if it does not have any objects asserting has_collection_member
+  # deletes the object identified by pid if it does not have any objects asserting has_part
   def self.garbage_collect(pid)
     begin 
       obj = FileAsset.load_instance(pid)
