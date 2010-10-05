@@ -10,8 +10,17 @@ namespace :doc do
     require 'yard/rake/yardoc_task'
 
     YARD::Rake::YardocTask.new(:generate) do |yt|
-      yt.files   = Dir.glob(File.join(project_root, 'lib', '**', '*.rb')) + 
-                   [ File.join(project_root, 'README.textile') ]
+      yt.files   =  Dir.glob(File.join(project_root, 'lib', '*.rb')) + 
+                    Dir.glob(File.join(project_root, 'lib', '**', '*.rb')) +
+                    Dir.glob(File.join(project_root, 'vendor','plugins','hydra_repository','lib', '*.rb')) +
+                    Dir.glob(File.join(project_root, 'vendor','plugins','hydra_repository','lib','**','*.rb')) +
+                    Dir.glob(File.join(project_root, 'vendor','plugins','hydra_repository','app','controllers','*.rb')) +
+                    Dir.glob(File.join(project_root, 'vendor','plugins','hydra_repository','app','helpers','*.rb')) +
+                    Dir.glob(File.join(project_root, 'vendor','plugins','hydra_repository','app','models','*.rb')) +
+                    
+                   [ File.join(project_root, 'README.textile') ] +
+                   [ File.join(project_root, 'RELEASE_NOTES.textile') ]
+                   
       yt.options = ['--output-dir', doc_destination, '--readme', 'README.textile']
     end
   rescue LoadError
