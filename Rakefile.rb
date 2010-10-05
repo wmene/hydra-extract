@@ -6,8 +6,10 @@ require 'rake'
 require 'rake/testtask'
 require 'spec/rake/spectask'
 
+
 # Import external rake tasks
 Dir.glob('lib/tasks/*.rake').each { |r| import r }
+Dir.glob('vendor/plugins/hydra_repository/tasks/*.rake').each { |r| import r }
 
 task :default  => :verify_rcov
 
