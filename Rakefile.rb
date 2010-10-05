@@ -14,8 +14,8 @@ Dir.glob('vendor/plugins/hydra_repository/tasks/*.rake').each { |r| import r }
 task :default  => :verify_rcov
 
 require 'spec/rake/verify_rcov'
-RCov::VerifyTask.new(:verify_rcov => ['clean', 'rspec_with_rcov', 'rdoc']) do |t|
-  t.threshold = 40.84
+RCov::VerifyTask.new(:verify_rcov => ['clean', 'rspec_with_rcov', 'doc']) do |t|
+  t.threshold = 56.54
   t.index_html = 'coverage/index.html'
 end
 
